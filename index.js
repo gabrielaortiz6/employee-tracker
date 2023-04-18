@@ -33,12 +33,12 @@ function startApp() {
         case 'Add A Department':
           addDepartment();
           break;
-        // case 'Add A Role':
-        //   addRole();
-        //   break;
-        // case 'Add An Employee':
-        //   addEmployee();
-        //   break;
+        case 'Add A Role':
+          addRoles();
+          break;
+        case 'Add An Employee':
+          addEmployee();
+          break;
         // case 'Update An Employee Role':
         //   updateEmployeeRole();
         //   break;
@@ -112,6 +112,88 @@ function addDepartment() {
         }
       );
     });
-}
+};
+
+function addRoles() {
+  inquirer
+    .prompt([
+      {
+        type: "input",
+        message: "Enter role title: ",
+        name: "title",
+      },
+      {
+        type: "input",
+        message: "Enter salary: ",
+        name: "salary",
+      },
+      {
+        type: "input",
+        message: "Enter department ID: ",
+        name: "department_id",
+      },
+    ])
+    .then((answer) => {
+      connection.query(
+        "INSERT INTO roles SET ?",
+        {
+          title: answer.title,
+          salary: answer.salary,
+          department_id: answer.department_id,
+        },
+        (err, res) => {
+          if (err) throw err;
+          console.log(res.affectedRows + " role added!\n");
+          startApp();
+        }
+      );
+    });
+};
+
+function addEmployee() {
+  inquirer.prompt([
+    {
+      type: "input",
+      message: "Enter the employee's first name:",
+      name: "firstName"
+    },
+    {
+      type: "input",
+      message: "Enter the employee's last name:",
+      name: "lastName"
+    },
+    {
+      type: "list",
+      message: "Select the employee's role:",
+      name: "roleId",
+      choices: function() {
+        return getRoles().map(role => ({ name: role.title, value: role.id }));
+      }
+    },
+    {
+      type: "list",
+      message: "Select the employee's manager:",
+      name: "managerId",
+      choices: function() {
+        return getEmployees().map(employee => ({ name: employee.first_name + " " + employee.last_name, value: employee.id }));
+      }
+    }
+  ]).then(function(answer) {
+    connection.query(
+      "INSERT INTO employee SET ?",
+      {
+        first_name: answer.firstName,
+        last_name: answer.lastName,
+        roles_id: answer.roleId,
+        manager_id: answer.managerId
+      },
+      function(err) {
+        if (err) throw err;
+        console.log("The employee was added successfully!");
+        startApp();
+      }
+    );
+  });
+};
 
 startApp();
