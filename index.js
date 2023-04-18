@@ -65,7 +65,7 @@ function viewAllRoles() {
       roles.salary, 
       department.title AS department 
     FROM roles 
-    LEFT JOIN department ON roles.department_id = department.id`;
+    INNER JOIN departments ON roles.department_id = departments.id`;
   connection.query(query, (err, res) => {
     if (err) throw err;
     console.table(res);
@@ -166,16 +166,18 @@ function addEmployee() {
       type: "list",
       message: "Select the employee's role:",
       name: "roleId",
-      choices: function() {
-        return getRoles().map(role => ({ name: role.title, value: role.id }));
-      }
+      choices: () => {
+        const roles = viewAllRoles();
+        console.log(roles);
+        return roles.map(roles => ({ name: roles.title, value: roles.id }));
+      },
     },
     {
       type: "list",
       message: "Select the employee's manager:",
       name: "managerId",
       choices: function() {
-        return getEmployees().map(employee => ({ name: employee.first_name + " " + employee.last_name, value: employee.id }));
+        return viewAllEmployees().map(employee => ({ name: employee.first_name + " " + employee.last_name, value: employee.id }));
       }
     }
   ]).then(function(answer) {
