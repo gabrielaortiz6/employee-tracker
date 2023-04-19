@@ -65,7 +65,7 @@ function viewAllRoles() {
       roles.salary, 
       department.title AS department 
     FROM roles 
-    INNER JOIN departments ON roles.department_id = departments.id`;
+    INNER JOIN department ON roles.department_id = department.id`;
   connection.query(query, (err, res) => {
     if (err) throw err;
     console.table(res);
@@ -166,8 +166,8 @@ function addEmployee() {
       type: "list",
       message: "Select the employee's role:",
       name: "roleId",
-      choices: () => {
-        const roles = viewAllRoles();
+      choices: async function() {
+        const roles = await viewAllRoles();
         console.log(roles);
         return roles.map(roles => ({ name: roles.title, value: roles.id }));
       },
