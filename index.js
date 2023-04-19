@@ -206,36 +206,83 @@ function addEmployee() {
 };
 
 function updateEmployeeRole() {
-  inquirer.prompt([
-    {
-      type: "list",
-      message: "Which employee's role do you want to update?",
-      name: "employeeID",
-      choices: async function () {
-        const [rows, fields] = await viewAllEmployees();
-        return rows.map(employee => ({ name: employee.first_name + " " + employee.last_name, value: employee.id }));
-      }
-    },
-    {
-      type: "list",
-      message: "Which role do you want to assign the selected employee?",
-      name: "updateRoleID",
-      choices: async function () {
-        const [rows, fields] = await viewAllRoles();
-        return rows.map(role => ({ name: role.title, value: role.id }));
+//   inquirer.prompt([
+//     {
+//       type: "list",
+//       message: "Which employee's role do you want to update?",
+//       name: "employeeID",
+//       choices: async function () {
+//         const [rows, fields] = await viewAllEmployees();
+//         return rows.map(employee => ({ name: employee.first_name + " " + employee.last_name, value: employee.id }));
+//       }
+//     },
+//     {
+//       type: "list",
+//       message: "Which role do you want to assign the selected employee?",
+//       name: "updateRoleID",
+//       choices: async function () {
+//         const [rows, fields] = await viewAllRoles();
+//         return rows.map(role => ({ name: role.title, value: role.id }));
+//       },
+//     },
+//   ])
+//   .then(function (answer) {
+//     connection.query(
+//       "UPDATE employee SET roles_id = ? WHERE id = ?",
+//       [answer.leId, answer.employeeId],
+//       function (err) {
+//         if (err) throw err;
+//         console.log("Updated the employee's role successfully!");
+//         startApp();
+//       }
+//     );
+//   });
+// };
+connection.query(`SELECT * FROM employee`, (err, employees) => {
+  if (err) throw err;
+
+  inquirer
+    .prompt([
+      {
+        type: "list",
+        message: "Select the employee to update:",
+        name: "employeeId",
+        choices: employees.map((employee) => ({
+          name: `${employee.first_name} ${employee.last_name}`,
+          value: employee.id,
+        })),
       },
-    },
-  ]).then(function (answer) {
-    connection.query(
-      "UPDATE employee SET roles_id = ? WHERE id = ?",
-      [answer.updateRoleId, answer.employeeId],
-      function (err) {
+    ])
+    .then((employeeAnswer) => {
+      connection.query(`SELECT * FROM roles`, (err, roles) => {
         if (err) throw err;
-        console.log("Updated the employee's role successfully!");
-        startApp();
-      }
-    );
-  });
-};
+
+        inquirer
+          .prompt([
+            {
+              type: "list",
+              message: "Select the employee's new role:",
+              name: "updateRoleId",
+              choices: roles.map((role) => ({
+                name: role.title,
+                value: role.id,
+              })),
+            },
+          ])
+          .then((roleAnswer) => {
+            connection.query(
+              `UPDATE employee SET roles_id = ? WHERE id = ?`,
+              [roleAnswer.updateRoleId, employeeAnswer.employeeId],
+              (err) => {
+                if (err) throw err;
+                console.log("Employee role updated!");
+                startApp();
+              }
+            );
+          });
+      });
+    });
+});
+}
 
 startApp();
