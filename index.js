@@ -2,6 +2,9 @@ const connection = require('./db/connection');
 const consoleTable = require('console.table');
 const inquirer = require('inquirer');
 
+require('events').EventEmitter.defaultMaxListeners = 15;
+const readline = require('readline');
+
 const promiseConnection = connection.promise();
 
 function startApp() {
@@ -41,9 +44,9 @@ function startApp() {
         case 'Add An Employee':
           addEmployee();
           break;
-        // case 'Update An Employee Role':
-        //   updateEmployeeRole();
-        //   break;
+        case 'Update An Employee Role':
+          updateEmployeeRole();
+          break;
         case 'Exit':
           connection.end();
           break;
@@ -59,22 +62,6 @@ function viewAllDepartments() {
   });
 }
 
-// function viewAllRoles() {
-//   const query = `
-//     SELECT 
-//       roles.id, 
-//       roles.title, 
-//       roles.salary, 
-//       department.title AS department 
-//     FROM roles 
-//     INNER JOIN department ON roles.department_id = department.id`;
-//   connection.query(query, (err, res) => {
-//     if (err) throw err;
-//     console.table(res);
-//     startApp();
-//   });
-// }
-
 function viewAllRoles() {
   const query = `
     SELECT 
@@ -84,11 +71,11 @@ function viewAllRoles() {
       department.title AS department 
     FROM roles 
     INNER JOIN department ON roles.department_id = department.id`;
-    connection.query(query, (err, res) => {
-          if (err) throw err;
-          console.table(res);
-          startApp();
-        });
+  connection.query(query, (err, res) => {
+    if (err) throw err;
+    console.table(res);
+    startApp();
+  });
   return promiseConnection.query(query);
 }
 
@@ -186,23 +173,16 @@ function addEmployee() {
       type: "list",
       message: "Select the employee's role:",
       name: "roleId",
-    //   choices: async function () {
-    //     await connection.query('SELECT * FROM roles', (err, res) => {
-    //       if (err) throw err;
-    //       return res.map(roles => ({ name: roles.title, value: roles.id }));
-    //     });
-    //   }
-    // },
-    choices: async function() {
-      const [rows, fields] = await viewAllRoles();
-      return rows.map(role => ({ name: role.title, value: role.id }));
+      choices: async function () {
+        const [rows, fields] = await viewAllRoles();
+        return rows.map(role => ({ name: role.title, value: role.id }));
+      },
     },
-  },
     {
       type: "list",
       message: "Select the employee's manager:",
       name: "managerId",
-      choices: async function() {
+      choices: async function () {
         const [rows, fields] = await viewAllEmployees();
         return rows.map(employee => ({ name: employee.first_name + " " + employee.last_name, value: employee.id }));
       }
@@ -219,6 +199,39 @@ function addEmployee() {
       function (err) {
         if (err) throw err;
         console.log("The employee was added successfully!");
+        startApp();
+      }
+    );
+  });
+};
+
+function updateEmployeeRole() {
+  inquirer.prompt([
+    {
+      type: "list",
+      message: "Which employee's role do you want to update?",
+      name: "employeeID",
+      choices: async function () {
+        const [rows, fields] = await viewAllEmployees();
+        return rows.map(employee => ({ name: employee.first_name + " " + employee.last_name, value: employee.id }));
+      }
+    },
+    {
+      type: "list",
+      message: "Which role do you want to assign the selected employee?",
+      name: "updateRoleID",
+      choices: async function () {
+        const [rows, fields] = await viewAllRoles();
+        return rows.map(role => ({ name: role.title, value: role.id }));
+      },
+    },
+  ]).then(function (answer) {
+    connection.query(
+      "UPDATE employee SET roles_id = ? WHERE id = ?",
+      [answer.updateRoleId, answer.employeeId],
+      function (err) {
+        if (err) throw err;
+        console.log("Updated the employee's role successfully!");
         startApp();
       }
     );
