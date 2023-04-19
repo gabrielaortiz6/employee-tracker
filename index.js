@@ -84,6 +84,11 @@ function viewAllRoles() {
       department.title AS department 
     FROM roles 
     INNER JOIN department ON roles.department_id = department.id`;
+    connection.query(query, (err, res) => {
+          if (err) throw err;
+          console.table(res);
+          startApp();
+        });
   return promiseConnection.query(query);
 }
 
@@ -106,6 +111,7 @@ function viewAllEmployees() {
     console.table(res);
     startApp();
   });
+  return promiseConnection.query(query);
 }
 
 function addDepartment() {
@@ -196,8 +202,9 @@ function addEmployee() {
       type: "list",
       message: "Select the employee's manager:",
       name: "managerId",
-      choices: function () {
-        return viewAllEmployees().map(employee => ({ name: employee.first_name + " " + employee.last_name, value: employee.id }));
+      choices: async function() {
+        const [rows, fields] = await viewAllEmployees();
+        return rows.map(employee => ({ name: employee.first_name + " " + employee.last_name, value: employee.id }));
       }
     }
   ]).then(function (answer) {
