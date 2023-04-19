@@ -2,6 +2,8 @@ const connection = require('./db/connection');
 const consoleTable = require('console.table');
 const inquirer = require('inquirer');
 
+const promiseConnection = connection.promise();
+
 function startApp() {
   inquirer
     .prompt({
@@ -57,6 +59,22 @@ function viewAllDepartments() {
   });
 }
 
+// function viewAllRoles() {
+//   const query = `
+//     SELECT 
+//       roles.id, 
+//       roles.title, 
+//       roles.salary, 
+//       department.title AS department 
+//     FROM roles 
+//     INNER JOIN department ON roles.department_id = department.id`;
+//   connection.query(query, (err, res) => {
+//     if (err) throw err;
+//     console.table(res);
+//     startApp();
+//   });
+// }
+
 function viewAllRoles() {
   const query = `
     SELECT 
@@ -66,11 +84,7 @@ function viewAllRoles() {
       department.title AS department 
     FROM roles 
     INNER JOIN department ON roles.department_id = department.id`;
-  connection.query(query, (err, res) => {
-    if (err) throw err;
-    console.table(res);
-    startApp();
-  });
+  return promiseConnection.query(query);
 }
 
 function viewAllEmployees() {
@@ -166,21 +180,27 @@ function addEmployee() {
       type: "list",
       message: "Select the employee's role:",
       name: "roleId",
-      choices: async function() {
-        const roles = await viewAllRoles();
-        console.log(roles);
-        return roles.map(roles => ({ name: roles.title, value: roles.id }));
-      },
+    //   choices: async function () {
+    //     await connection.query('SELECT * FROM roles', (err, res) => {
+    //       if (err) throw err;
+    //       return res.map(roles => ({ name: roles.title, value: roles.id }));
+    //     });
+    //   }
+    // },
+    choices: async function() {
+      const [rows, fields] = await viewAllRoles();
+      return rows.map(role => ({ name: role.title, value: role.id }));
     },
+  },
     {
       type: "list",
       message: "Select the employee's manager:",
       name: "managerId",
-      choices: function() {
+      choices: function () {
         return viewAllEmployees().map(employee => ({ name: employee.first_name + " " + employee.last_name, value: employee.id }));
       }
     }
-  ]).then(function(answer) {
+  ]).then(function (answer) {
     connection.query(
       "INSERT INTO employee SET ?",
       {
@@ -189,7 +209,7 @@ function addEmployee() {
         roles_id: answer.roleId,
         manager_id: answer.managerId
       },
-      function(err) {
+      function (err) {
         if (err) throw err;
         console.log("The employee was added successfully!");
         startApp();
