@@ -42,7 +42,7 @@ Git clone from Github and initiate with node index.
 
 The following video and shows the web application's appearance and functionality:
 
-
+![Screenrecording of Functionality](https://drive.google.com/file/d/1avC8-09IxJBY1t3Eh5Bo8DVRcAPHdDHR/view?pli=1)
 
 ## Link to GitHub Repo
 [GitHub Repo](https://github.com/gabrielaortiz6/employee-tracker)
