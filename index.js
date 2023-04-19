@@ -158,86 +158,66 @@ function addRoles() {
 };
 
 function addEmployee() {
-  inquirer.prompt([
-    {
-      type: "input",
-      message: "Enter the employee's first name:",
-      name: "firstName"
-    },
-    {
-      type: "input",
-      message: "Enter the employee's last name:",
-      name: "lastName"
-    },
-    {
-      type: "list",
-      message: "Select the employee's role:",
-      name: "roleId",
-      choices: async function () {
-        const [rows, fields] = await viewAllRoles();
-        return rows.map(role => ({ name: role.title, value: role.id }));
-      },
-    },
-    {
-      type: "list",
-      message: "Select the employee's manager:",
-      name: "managerId",
-      choices: async function () {
-        const [rows, fields] = await viewAllEmployees();
-        return rows.map(employee => ({ name: employee.first_name + " " + employee.last_name, value: employee.id }));
-      }
-    }
-  ]).then(function (answer) {
-    connection.query(
-      "INSERT INTO employee SET ?",
-      {
-        first_name: answer.firstName,
-        last_name: answer.lastName,
-        roles_id: answer.roleId,
-        manager_id: answer.managerId
-      },
-      function (err) {
-        if (err) throw err;
-        console.log("The employee was added successfully!");
-        startApp();
-      }
-    );
-  });
-};
+    inquirer.prompt({
+        type: "input",
+        message: "Enter the employee's first name:",
+        name: "firstName"
+      })
+      .then(function (answer) {
+        //const firstName = answer.firstName;
+        return inquirer.prompt({
+          type: "input",
+          message: "Enter the employee's last name:",
+          name: "lastName"
+        });
+      })
+      .then(function (answer) {
+        //const lastName = answer.lastName;
+        return inquirer.prompt({
+          type: "list",
+          message: "Select the employee's role:",
+          name: "roleId",
+          choices: async function () {
+            const [rows, fields] = await viewAllRoles();
+            return rows.map(role => ({ name: role.title, value: role.id }));
+          }
+        });
+      })
+      .then(function (answer) {
+        //const roleId = answer.roleId;
+        return inquirer.prompt({
+          type: "list",
+          message: "Select the employee's manager:",
+          name: "managerId",
+          choices: async function () {
+            const [rows, fields] = await viewAllEmployees();
+            return rows.map(employee => ({ name: employee.first_name + " " + employee.last_name, value: employee.id }));
+          }
+        });
+      })
+      .then(function (answer) {
+        //const managerId = answer.managerId;
+        console.log(answer.firstName);
+        connection.query(
+          "INSERT INTO employee SET ?",
+          {
+            first_name: answer.firstName,
+            last_name: answer.lastName,
+            roles_id: answer.roleId,
+            manager_id: answer.managerId
+          },
+          function (err) {
+            if (err) throw err;
+            console.log("The employee was added successfully!");
+            startApp();
+          }
+        );
+      });
+  }
+
+
 
 function updateEmployeeRole() {
-//   inquirer.prompt([
-//     {
-//       type: "list",
-//       message: "Which employee's role do you want to update?",
-//       name: "employeeID",
-//       choices: async function () {
-//         const [rows, fields] = await viewAllEmployees();
-//         return rows.map(employee => ({ name: employee.first_name + " " + employee.last_name, value: employee.id }));
-//       }
-//     },
-//     {
-//       type: "list",
-//       message: "Which role do you want to assign the selected employee?",
-//       name: "updateRoleID",
-//       choices: async function () {
-//         const [rows, fields] = await viewAllRoles();
-//         return rows.map(role => ({ name: role.title, value: role.id }));
-//       },
-//     },
-//   ])
-//   .then(function (answer) {
-//     connection.query(
-//       "UPDATE employee SET roles_id = ? WHERE id = ?",
-//       [answer.leId, answer.employeeId],
-//       function (err) {
-//         if (err) throw err;
-//         console.log("Updated the employee's role successfully!");
-//         startApp();
-//       }
-//     );
-//   });
-// };
 connection.query(`SELECT * FROM employee`, (err, employees) => {
   if (err) throw err;
 
