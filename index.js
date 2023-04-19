@@ -122,6 +122,9 @@ function addDepartment() {
 };
 
 function addRoles() {
+  connection.query("SELECT * FROM department", function (err, res) {
+    if (err) throw err;
+
   inquirer
     .prompt([
       {
@@ -136,9 +139,13 @@ function addRoles() {
       },
       {
         //fix this so it is a list/choice
-        type: "input",
+        type: "list",
         message: "Enter department ID: ",
         name: "department_id",
+        choices: res.map((department) => ({
+          name: department.title,
+          value: department.id,
+        })),
       },
     ])
     .then((answer) => {
@@ -154,9 +161,10 @@ function addRoles() {
           console.log(res.affectedRows + " role added!\n");
           startApp();
         }
-      );
-    });
-};
+        );
+      });
+  });
+}
 
 function addEmployee() {
   let answers = {};
