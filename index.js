@@ -138,7 +138,6 @@ function addRoles() {
         name: "salary",
       },
       {
-        //fix this so it is a list/choice
         type: "list",
         message: "Enter department ID: ",
         name: "department_id",
