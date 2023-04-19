@@ -135,6 +135,7 @@ function addRoles() {
         name: "salary",
       },
       {
+        //fix this so it is a list/choice
         type: "input",
         message: "Enter department ID: ",
         name: "department_id",
@@ -158,53 +159,65 @@ function addRoles() {
 };
 
 function addEmployee() {
-    inquirer.prompt({
+  let answers = {};
+
+    inquirer
+    .prompt({
         type: "input",
         message: "Enter the employee's first name:",
         name: "firstName"
       })
-      .then(function (answer) {
-        //const firstName = answer.firstName;
+      .then((answer) => {
+        answers.firstName = answer.firstName;
         return inquirer.prompt({
           type: "input",
           message: "Enter the employee's last name:",
           name: "lastName"
         });
       })
-      .then(function (answer) {
-        //const lastName = answer.lastName;
-        return inquirer.prompt({
+      .then((answer) => {
+        answers.lastName = answer.lastName;
+        connection.query(`SELECT * FROM roles`, (err, roles) => {
+          if (err) throw err;
+
+         return inquirer
+         .prompt([
+          {
           type: "list",
           message: "Select the employee's role:",
           name: "roleId",
-          choices: async function () {
-            const [rows, fields] = await viewAllRoles();
-            return rows.map(role => ({ name: role.title, value: role.id }));
-          }
-        });
-      })
-      .then(function (answer) {
-        //const roleId = answer.roleId;
-        return inquirer.prompt({
+          choices: roles.map((role) => ({
+            name: role.title,
+            value: role.id,
+          })),
+        },
+      ])
+      .then((answer) => {
+        answers.roleId = answer.roleId;
+        connection.query(`SELECT * FROM employee`, (err, employees) => {
+        if (err) throw err;
+
+         return inquirer
+         .prompt([
+          {
           type: "list",
           message: "Select the employee's manager:",
           name: "managerId",
-          choices: async function () {
-            const [rows, fields] = await viewAllEmployees();
-            return rows.map(employee => ({ name: employee.first_name + " " + employee.last_name, value: employee.id }));
-          }
-        });
-      })
-      .then(function (answer) {
-        //const managerId = answer.managerId;
-        console.log(answer.firstName);
+          choices: employees.map((employee) => ({
+            name: `${employee.first_name} ${employee.last_name}`,
+            value: employee.id,
+          })),
+        },
+      ])
+      .then((answer) => {
+        answers.managerId = answer.managerId;
         connection.query(
           "INSERT INTO employee SET ?",
           {
-            first_name: answer.firstName,
-            last_name: answer.lastName,
-            roles_id: answer.roleId,
-            manager_id: answer.managerId
+            first_name: answers.firstName,
+            last_name: answers.lastName,
+            roles_id: answers.roleId,
+            manager_id: answers.managerId
           },
           function (err) {
             if (err) throw err;
@@ -213,9 +226,11 @@ function addEmployee() {
           }
         );
       });
-  }
-
-
+    });
+  });
+})
+}
+    )}
 
 function updateEmployeeRole() {
 connection.query(`SELECT * FROM employee`, (err, employees) => {
